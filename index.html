@@ -637,21 +637,23 @@
        their avatar, their standings box, their name wherever it appears and
        their column in the scorecard, so people can find themselves by colour. */
 
-    .p0 { --pc: #7c5cff; --pc-text: #5334db; }
-    .p1 { --pc: #0ea5e9; --pc-text: #0369a1; }
-    .p2 { --pc: #f59e0b; --pc-text: #b45309; }
-    .p3 { --pc: #10b981; --pc-text: #047857; }
+    /* --pc-chart is the stroke used in the chart. Same four hues, stepped for
+       each surface and validated (six checks, all-pairs) in both modes. */
+    .p0 { --pc: #7c5cff; --pc-text: #5334db; --pc-chart: #7c5cff; }
+    .p1 { --pc: #0ea5e9; --pc-text: #0369a1; --pc-chart: #0284c7; }
+    .p2 { --pc: #f59e0b; --pc-text: #b45309; --pc-chart: #a85009; }
+    .p3 { --pc: #10b981; --pc-text: #047857; --pc-chart: #047857; }
 
-    :root[data-theme="dark"] .p0 { --pc-text: #b6a8ff; }
-    :root[data-theme="dark"] .p1 { --pc-text: #7dd3fc; }
-    :root[data-theme="dark"] .p2 { --pc-text: #fcd34d; }
-    :root[data-theme="dark"] .p3 { --pc-text: #6ee7b7; }
+    :root[data-theme="dark"] .p0 { --pc-text: #b6a8ff; --pc-chart: #7c5cff; }
+    :root[data-theme="dark"] .p1 { --pc-text: #7dd3fc; --pc-chart: #0284c7; }
+    :root[data-theme="dark"] .p2 { --pc-text: #fcd34d; --pc-chart: #cc6a10; }
+    :root[data-theme="dark"] .p3 { --pc-text: #6ee7b7; --pc-chart: #059669; }
 
     @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) .p0 { --pc-text: #b6a8ff; }
-      :root:not([data-theme="light"]) .p1 { --pc-text: #7dd3fc; }
-      :root:not([data-theme="light"]) .p2 { --pc-text: #fcd34d; }
-      :root:not([data-theme="light"]) .p3 { --pc-text: #6ee7b7; }
+      :root:not([data-theme="light"]) .p0 { --pc-text: #b6a8ff; --pc-chart: #7c5cff; }
+      :root:not([data-theme="light"]) .p1 { --pc-text: #7dd3fc; --pc-chart: #0284c7; }
+      :root:not([data-theme="light"]) .p2 { --pc-text: #fcd34d; --pc-chart: #cc6a10; }
+      :root:not([data-theme="light"]) .p3 { --pc-text: #6ee7b7; --pc-chart: #059669; }
     }
 
     .pname { color: var(--pc-text); }
@@ -1187,6 +1189,309 @@
       .standings-grid.cols-3 .stand-togo { font-size: 10.5px; }
     }
 
+    /* ---------- position chart ---------- */
+
+    .chart-launch {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow-sm), var(--ring);
+      cursor: pointer;
+      text-align: left;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .chart-launch:hover { transform: translateY(-2px); border-color: var(--line-strong); box-shadow: var(--shadow); }
+    .chart-launch:active { transform: translateY(0) scale(.99); }
+
+    .chart-launch-cards { display: flex; flex: none; }
+
+    .mini-card {
+      width: 22px;
+      height: 30px;
+      margin-left: -8px;
+      display: grid;
+      place-items: center;
+      border-radius: 5px;
+      border: 1.5px solid var(--pc-chart);
+      background: var(--surface-solid);
+      color: var(--pc-chart);
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: var(--shadow-xs);
+      transform: rotate(-6deg);
+    }
+
+    .mini-card:first-child { margin-left: 0; }
+    .mini-card:nth-child(2) { transform: rotate(-2deg) translateY(-1px); }
+    .mini-card:nth-child(3) { transform: rotate(3deg); }
+    .mini-card:nth-child(4) { transform: rotate(7deg) translateY(1px); }
+
+    .chart-launch-main { flex: 1; min-width: 0; }
+    .chart-launch-main strong { display: block; font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+    .chart-launch-main span { display: block; margin-top: 2px; color: var(--muted); font-size: 12.5px; }
+    .chart-launch-go { flex: none; color: var(--muted); font-size: 17px; }
+
+    /* ---- popup ---- */
+
+    .chart-scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 55;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: rgba(6, 10, 22, 0.66);
+      backdrop-filter: blur(5px);
+      animation: fade .2s ease;
+      overflow-y: auto;
+    }
+
+    .chart-modal {
+      width: min(680px, 100%);
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      padding: 18px 16px 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--surface-solid);
+      box-shadow: var(--shadow-lg);
+      animation: chartIn .3s cubic-bezier(.2, .85, .3, 1.05);
+    }
+
+    @keyframes chartIn {
+      from { opacity: 0; transform: translateY(18px) scale(.97); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .chart-modal-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .chart-modal-head h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .chart-modal-head p { margin-top: 2px; color: var(--muted); font-size: 13px; }
+
+    .chart-close {
+      flex: none;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 15px;
+      cursor: pointer;
+      transition: background .16s ease, color .16s ease, transform .14s ease;
+    }
+
+    .chart-close:hover { background: var(--rose-soft); color: var(--rose); }
+    .chart-close:active { transform: scale(.92); }
+
+    .chart-modal-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      margin-bottom: 8px;
+    }
+
+    .chart-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12.5px;
+      font-weight: 650;
+    }
+
+    .chart-legend-item i { width: 14px; height: 3px; border-radius: 2px; background: var(--pc-chart); }
+
+    .chart-wrap { width: 100%; }
+    .chart { display: block; overflow: visible; }
+
+    .chart-grid { stroke: var(--line); stroke-width: 1; }
+    .chart-cross { stroke: var(--line-strong); stroke-width: 1; }
+    .chart-target { stroke: var(--gold); stroke-width: 1.5; opacity: .75; }
+
+    .chart-target-label { fill: var(--gold); font-size: 11px; font-weight: 700; }
+
+    .chart-ylabel {
+      fill: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .chart-xlabel {
+      fill: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .chart-halo {
+      fill: none;
+      stroke: var(--surface-solid);
+      stroke-width: 6;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    .chart-stroke {
+      fill: none;
+      stroke: var(--pc-chart);
+      stroke-width: 2;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    .chart-card-ring { fill: var(--surface-solid); }
+    .chart-card-face { fill: var(--surface-solid); stroke: var(--pc-chart); stroke-width: 1.5; }
+    .chart-card-text { fill: var(--pc-chart); font-family: var(--font-display); font-size: 12px; font-weight: 800; }
+    .chart-card.lead .chart-card-face { fill: var(--pc-chart); }
+    .chart-card.lead .chart-card-text { fill: #fff; }
+
+    .chart-endlabel { fill: var(--pc-text); font-size: 12px; font-weight: 700; }
+    .chart-endpts { fill: var(--ink); font-family: var(--font-display); font-size: 14.5px; font-weight: 800; }
+
+    .chart-crown {
+      font-size: 15px;
+      opacity: 0;
+      animation: crownIn .5s cubic-bezier(.2, .9, .3, 1.4) forwards;
+      animation-delay: 1.35s;
+    }
+
+    @keyframes crownIn {
+      from { opacity: 0; transform: translateY(-9px) scale(.5) rotate(-18deg); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .chart-countdown {
+      height: 3px;
+      margin: -4px 0 12px;
+      border-radius: 999px;
+      background: var(--surface-3);
+      overflow: hidden;
+    }
+
+    .chart-countdown i {
+      display: block;
+      height: 100%;
+      width: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--brand), var(--brand-2));
+      transform-origin: left center;
+      animation: countdown linear forwards;
+    }
+
+    @keyframes countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+    .chart-auto { opacity: .8; }
+
+    .chart-hit { fill: transparent; cursor: pointer; }
+    .chart-hit:focus-visible { fill: var(--brand-soft); outline: none; }
+
+    .chart-readout {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 12px;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+
+    .chart-readout-round {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .chart-readout-item {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .chart-readout-item b { font-family: var(--font-display); font-size: 12px; font-weight: 800; color: var(--pc-chart); }
+    .chart-readout-item i { font-style: normal; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+    .chart-note { margin-top: 8px; color: var(--muted); font-size: 11.5px; }
+
+    .chart-key { color: var(--muted); font-size: 11.5px; font-weight: 600; }
+    .chart-key b { font-family: var(--font-display); color: var(--ink); font-weight: 800; margin-left: 6px; }
+    .chart-key b:first-child { margin-left: 0; }
+
+    /* the lines sweep in, then the cards deal round by round */
+    .chart-line .chart-stroke,
+    .chart-line .chart-halo {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: drawLine 1s cubic-bezier(.35, .7, .3, 1) forwards;
+      animation-delay: var(--d, 0ms);
+    }
+
+    @keyframes drawLine { to { stroke-dashoffset: 0; } }
+
+    .chart-card {
+      opacity: 0;
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: dealCard .36s cubic-bezier(.2, .9, .3, 1.3) forwards;
+      animation-delay: var(--d, 0ms);
+    }
+
+    @keyframes dealCard {
+      from { opacity: 0; transform: translateY(-14px) scale(.6) rotate(-14deg); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .chart-endlabel { opacity: 0; animation: fadeIn .34s ease forwards; animation-delay: 1.15s; }
+
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .chart-line .chart-stroke,
+      .chart-line .chart-halo { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
+      .chart-card, .chart-endlabel, .chart-crown { opacity: 1; animation: none; }
+      .chart-countdown i { animation: none; transform: scaleX(0); }
+      .chart-modal { animation: none; }
+    }
+
     /* finish-game panel — deliberately prominent */
     .finish-panel {
       display: grid;
@@ -1465,8 +1770,39 @@
       .round-scores.c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
 
+    .round-rank {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      margin-bottom: 5px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--surface-3);
+      color: var(--muted);
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .round-rank.lead { background: var(--gold-soft); color: var(--gold); }
+
+    .round-move { font-size: 8.5px; font-weight: 800; line-height: 1; }
+    .round-move.up { color: var(--green); }
+    .round-move.down { color: var(--rose); }
+
+    .round-total {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
     .round-score {
-      padding: 10px 7px 11px;
+      padding: 9px 7px 10px;
       border-radius: 12px;
       background: color-mix(in srgb, var(--pc) 8%, var(--surface-solid));
       border: 1px solid color-mix(in srgb, var(--pc) 34%, transparent);
@@ -1488,6 +1824,8 @@
       .round-scores.c3 { gap: 6px; }
       .round-scores.c3 .round-score { padding-inline: 4px; }
       .round-scores.c3 .round-score span { font-size: 13.5px; }
+      .round-scores.c3 .round-rank { font-size: 10px; padding-inline: 6px; }
+      .round-scores.c3 .round-total { font-size: 10.5px; }
     }
 
     .round-score strong {
@@ -2169,8 +2507,15 @@
       { type: "quad", symbol: "♠♥♦♣", label: "Four of a kind", detail: "Same rank in every suit", points: 4 },
       { type: "aces", symbol: "4A", label: "Four aces", detail: "All four aces in one hand", points: 5 },
       { type: "trails", symbol: "3×3", label: "Three trails", detail: "Three sets of three of a kind", points: 6 },
-      { type: "run", symbol: "A→K", label: "A to K run", detail: "Every rank ace to king, no repeats", points: 0, wins: true }
+      { type: "run", symbol: "A→K", label: "A to K run", detail: "Every rank ace to king, no repeats", points: 0, wins: true, toTarget: true }
     ];
+    /* A run doesn't score a fixed amount — it takes that player straight to
+       the winning target, so the usual end-of-game check finishes the game. */
+    function handAward(hand, target, currentTotal) {
+      if (!hand) return 0;
+      return hand.toTarget ? Math.max(0, asNumber(target, 0) - asNumber(currentTotal, 0)) : hand.points;
+    }
+
     const handByType = {};
     specialHands.forEach((hand) => { handByType[hand.type] = hand; });
 
@@ -2288,6 +2633,26 @@
       const totals = new Array(playerCount).fill(0);
       rounds.forEach((round) => roundScores(round).forEach((score, index) => { totals[index] += asNumber(score, 0); }));
       return totals;
+    }
+
+    /* Cumulative standing after each round, so the history can show how
+       positions moved. Ties share a place, matching the payout grouping. */
+    function standingsByRound(playerCount, rounds) {
+      const running = new Array(playerCount).fill(0);
+      return rounds.map((round) => {
+        roundScores(round).forEach((score, index) => { running[index] += asNumber(score, 0); });
+        const totals = running.slice();
+        const order = totals.map((_, index) => index).sort((a, b) => totals[b] - totals[a] || a - b);
+        const places = new Array(playerCount).fill(null);
+        let cursor = 0;
+        while (cursor < order.length) {
+          let end = cursor;
+          while (end < order.length && totals[order[end]] === totals[order[cursor]]) end += 1;
+          for (let k = cursor; k < end; k += 1) places[order[k]] = { place: cursor, tied: end - cursor > 1 };
+          cursor = end;
+        }
+        return { totals, places };
+      });
     }
 
     function rankedPlayers(players, totals, winnerIndex = null) {
@@ -2516,9 +2881,10 @@
       const event = roundEvent(round);
       if (!hand || !event) return null;
       const player = players[event.player];
+      const awarded = asNumber(roundScores(round)[event.player], 0);
       return h("span", { className: `event-pill ${hand.wins ? "win" : ""}` },
         h("span", { className: "sym" }, hand.symbol),
-        `${hand.label}${player ? ` · ${player.name}` : ""}${hand.wins ? " · wins" : ` +${hand.points}`}`
+        `${hand.label}${player ? ` · ${player.name}` : ""} +${awarded}${hand.wins ? " · wins" : ""}`
       );
     }
 
@@ -2526,7 +2892,7 @@
       const used = specialHands.filter((hand) => rounds.some((round) => roundEvent(round) && roundEvent(round).type === hand.type));
       if (!used.length) return null;
       return h("div", { className: "legend" }, used.map((hand) =>
-        h("span", { key: hand.type }, h("b", null, hand.symbol), hand.wins ? `${hand.label} (wins)` : `${hand.label} (+${hand.points})`)
+        h("span", { key: hand.type }, h("b", null, hand.symbol), hand.toTarget ? `${hand.label} (to target)` : `${hand.label} (+${hand.points})`)
       ));
     }
 
@@ -2865,15 +3231,362 @@
       );
     }
 
+    /* ---------- position chart ----------
+       Y is points, X is the round, so the line shows the real gap between
+       players. Each point is stamped with the card for that player's place
+       after that round — A 1st, K 2nd, Q 3rd, J 4th. Colour follows the
+       player, never their rank. */
+
+    const rankCards = ["A", "K", "Q", "J"];
+    const CHART_ROUND_WINDOW = 10;
+
+    function niceScale(min, max, target) {
+      const lo = Math.min(0, min);
+      const hi = Math.max(max, target);
+      const span = Math.max(1, hi - lo);
+      const raw = span / 4;
+      const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+      const norm = raw / mag;
+      const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+      const start = Math.floor(lo / step) * step;
+      const end = Math.ceil(hi / step) * step;
+      const ticks = [];
+      for (let v = start; v <= end + step / 1000; v += step) ticks.push(Math.round(v));
+      return { ticks, min: start, max: end };
+    }
+
+    function useElementWidth(ref, initial = 320) {
+      const [width, setWidth] = useState(initial);
+      useEffect(() => {
+        const node = ref.current;
+        if (!node) return undefined;
+        const measure = () => setWidth(Math.max(240, node.clientWidth));
+        measure();
+        if (typeof ResizeObserver === "undefined") {
+          window.addEventListener("resize", measure);
+          return () => window.removeEventListener("resize", measure);
+        }
+        const observer = new ResizeObserver(measure);
+        observer.observe(node);
+        return () => observer.disconnect();
+      }, [ref]);
+      return width;
+    }
+
+    function PositionChart({ players, byRound, target, animKey, crowned }) {
+      const wrapRef = useRef(null);
+      const width = useElementWidth(wrapRef);
+      const [active, setActive] = useState(null);
+
+      const total = byRound.length;
+      const start = Math.max(0, total - CHART_ROUND_WINDOW);
+      const shown = byRound.slice(start);
+      if (!shown.length) return null;
+
+      const narrow = width < 400;
+      const padLeft = 36;
+      const padRight = narrow ? 60 : 92;
+      const padTop = 22;
+      const padBottom = 34;
+      const plotW = Math.max(60, width - padLeft - padRight);
+      const plotH = (narrow ? 232 : 270) + Math.max(0, players.length - 2) * 16;
+      const height = padTop + plotH + padBottom;
+
+      const allTotals = shown.reduce((acc, stand) => acc.concat(stand.totals), []);
+      const scale = niceScale(Math.min.apply(null, allTotals), Math.max.apply(null, allTotals), target);
+      const cardW = 18, cardH = 24;
+      /* Two passes: size the fan from the room a round gets, then inset the
+         plot far enough that a fanned card never reaches the axis labels. */
+      const roughStep = shown.length > 1 ? Math.max(0, plotW - 40) / (shown.length - 1) : plotW;
+      const room = players.length > 1 ? (roughStep - cardW - 4) / (players.length - 1) : cardW;
+      const fanStep = Math.min(cardW + 3, Math.max(10, room));
+      const maxFan = players.length > 1 ? ((players.length - 1) / 2) * fanStep : 0;
+      const inset = Math.max(20, maxFan + cardW / 2 + 6);
+      const span = Math.max(0, plotW - inset * 2);
+      const stepX = shown.length > 1 ? span / (shown.length - 1) : 0;
+
+      const xAt = (i) => padLeft + inset + (shown.length > 1 ? i * stepX : span / 2);
+      const yAt = (points) => padTop + plotH - ((points - scale.min) / (scale.max - scale.min)) * plotH;
+
+
+      /* Players on similar points would stack their cards on top of each other,
+         so cards that collide vertically fan out sideways like a held hand.
+         The vertical position — the actual score — is never moved. */
+      const markerAt = shown.map((stand, i) => {
+        const rows = players
+          .map((_, idx) => ({ idx, y: yAt(stand.totals[idx]) }))
+          .sort((a, b) => a.y - b.y);
+        const groups = [];
+        rows.forEach((row) => {
+          const group = groups[groups.length - 1];
+          if (group && row.y - group[group.length - 1].y < cardH + 2) group.push(row);
+          else groups.push([row]);
+        });
+        const out = new Array(players.length);
+        groups.forEach((group) => {
+          group.forEach((row, k) => {
+            const offset = group.length === 1 ? 0 : (k - (group.length - 1) / 2) * fanStep;
+            out[row.idx] = { x: xAt(i) + offset, y: row.y };
+          });
+        });
+        return out;
+      });
+
+      /* End labels get nudged apart too — they annotate, they do not encode. */
+      const lastStand = shown[shown.length - 1];
+      const endLabels = players
+        .map((player, idx) => ({ idx, player, y: yAt(lastStand.totals[idx]) }))
+        .sort((a, b) => a.y - b.y);
+      let lastY = -Infinity;
+      endLabels.forEach((label) => {
+        label.ly = Math.max(label.y, lastY + 14);
+        lastY = label.ly;
+      });
+
+      const activeIndex = active == null ? shown.length - 1 : active;
+      const activeStand = shown[activeIndex];
+      const targetInView = target <= scale.max && target >= scale.min;
+
+      return h("div", { className: "chart-wrap", ref: wrapRef },
+        h("svg", {
+          className: "chart",
+          width: "100%",
+          height,
+          viewBox: `0 0 ${Math.max(width, 240)} ${height}`,
+          role: "img",
+          "aria-label": `Points after each round for ${players.map((p) => p.name).join(", ")}. The same figures are in the round history.`
+        },
+          scale.ticks.map((tick) => h("line", {
+            key: `g${tick}`,
+            className: "chart-grid",
+            x1: padLeft, x2: padLeft + plotW, y1: yAt(tick), y2: yAt(tick)
+          })),
+
+          scale.ticks.map((tick) => h("text", {
+            key: `t${tick}`,
+            className: "chart-ylabel",
+            x: padLeft - 8, y: yAt(tick) + 4, textAnchor: "end"
+          }, tick)),
+
+          /* the finish line */
+          targetInView ? h("line", {
+            className: "chart-target",
+            x1: padLeft, x2: padLeft + plotW, y1: yAt(target), y2: yAt(target)
+          }) : null,
+          targetInView ? h("text", {
+            className: "chart-target-label",
+            x: padLeft + 3, y: yAt(target) - 7, textAnchor: "start"
+          }, `🏁 Target ${target}`) : null,
+
+          h("line", {
+            className: "chart-cross",
+            x1: xAt(activeIndex), x2: xAt(activeIndex), y1: padTop - 8, y2: padTop + plotH + 6
+          }),
+
+          shown.map((_, i) => {
+            const every = shown.length > 7 ? 2 : 1;
+            if (i % every !== 0 && i !== shown.length - 1) return null;
+            return h("text", {
+              key: `x${i}`, className: "chart-xlabel",
+              x: xAt(i), y: padTop + plotH + 22, textAnchor: "middle"
+            }, `R${start + i + 1}`);
+          }),
+
+          h("g", { key: animKey, className: "chart-series" },
+            players.map((player, index) => {
+              const points = shown.map((stand, i) => `${xAt(i)},${yAt(stand.totals[index])}`).join(" ");
+              return h("g", { key: `s${index}`, className: `chart-line ${tone(index)}`, style: { "--d": `${index * 80}ms` } },
+                shown.length > 1 ? h("polyline", { className: "chart-halo", points, pathLength: "1" }) : null,
+                shown.length > 1 ? h("polyline", { className: "chart-stroke", points, pathLength: "1" }) : null
+              );
+            }),
+
+            /* cards deal round by round, so the game replays as you watch */
+            players.map((player, index) => shown.map((stand, i) => {
+              const place = stand.places[index].place;
+              const spot = markerAt[i][index];
+              const cx = spot.x;
+              const cy = spot.y;
+              const w = cardW, ht = cardH;
+              return h("g", {
+                key: `m${index}-${i}`,
+                className: `chart-card ${tone(index)}${place === 0 ? " lead" : ""}`,
+                style: { "--d": `${520 + i * 130 + index * 34}ms` }
+              },
+                h("rect", { className: "chart-card-ring", x: cx - w / 2 - 2, y: cy - ht / 2 - 2, width: w + 4, height: ht + 4, rx: 6 }),
+                h("rect", { className: "chart-card-face", x: cx - w / 2, y: cy - ht / 2, width: w, height: ht, rx: 4 }),
+                h("text", { className: "chart-card-text", x: cx, y: cy + 4.5, textAnchor: "middle" },
+                  rankCards[place] || String(place + 1))
+              );
+            })),
+
+            /* the latest round carries each player's running total, so the
+               scores can be read straight off the chart */
+            endLabels.map((label) => {
+              const cap = narrow ? 6 : 8;
+              const name = label.player.name;
+              const short = name.length > cap ? `${name.slice(0, cap - 1)}…` : name;
+              return h("text", {
+                key: `l${label.idx}`,
+                className: `chart-endlabel ${tone(label.idx)}`,
+                x: xAt(shown.length - 1) + maxFan + 13,
+                y: label.ly + 4
+              },
+                h("tspan", null, short),
+                h("tspan", { className: "chart-endpts" }, ` ${lastStand.totals[label.idx]}`)
+              );
+            }),
+
+            crowned && crowned.size
+              ? players.map((player, index) => {
+                  if (!crowned.has(index)) return null;
+                  const spot = markerAt[shown.length - 1][index];
+                  return h("text", {
+                    key: `crown${index}`,
+                    className: "chart-crown",
+                    x: spot.x, y: spot.y - cardH / 2 - 8,
+                    textAnchor: "middle"
+                  }, "\uD83D\uDC51");
+                })
+              : null
+          ),
+
+          shown.map((_, i) => h("rect", {
+            key: `h${i}`, className: "chart-hit",
+            x: xAt(i) - Math.max(16, stepX / 2), y: 0,
+            width: Math.max(32, stepX || plotW), height,
+            tabIndex: 0, role: "button",
+            "aria-label": `Round ${start + i + 1}`,
+            onMouseEnter: () => setActive(i),
+            onMouseLeave: () => setActive(null),
+            onFocus: () => setActive(i),
+            onBlur: () => setActive(null)
+          }))
+        ),
+
+        activeStand
+          ? h("div", { className: "chart-readout" },
+              h("span", { className: "chart-readout-round" }, `Round ${start + activeIndex + 1}`),
+              players
+                .map((player, index) => ({ player, index, place: activeStand.places[index].place, points: activeStand.totals[index] }))
+                .sort((a, b) => a.place - b.place || a.index - b.index)
+                .map((row) => h("span", { className: `chart-readout-item ${tone(row.index)}`, key: row.index },
+                  h("b", null, rankCards[row.place] || row.place + 1),
+                  row.player.name,
+                  h("i", null, `${row.points}`)
+                ))
+            )
+          : null,
+
+        start > 0 ? h("p", { className: "chart-note" }, `Showing the last ${CHART_ROUND_WINDOW} rounds.`) : null
+      );
+    }
+
+    /* The chart lives in a popup so the animation gets the whole screen. */
+    const CHART_AUTO_CLOSE_MS = 20000;
+
+    function ChartModal({ open, game, byRound, animKey, onClose }) {
+      const [counting, setCounting] = useState(true);
+      const timer = useRef(null);
+
+      useEffect(() => {
+        if (!open) return undefined;
+        const onKey = (event) => { if (event.key === "Escape") onClose(); };
+        window.addEventListener("keydown", onKey);
+        const previous = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+          window.removeEventListener("keydown", onKey);
+          document.body.style.overflow = previous;
+        };
+      }, [open, onClose]);
+
+      /* It closes itself so play can carry on, but anyone who starts reading
+         the chart keeps it open. */
+      useEffect(() => {
+        if (!open) return undefined;
+        setCounting(true);
+        timer.current = setTimeout(onClose, CHART_AUTO_CLOSE_MS);
+        return () => clearTimeout(timer.current);
+      }, [open, onClose]);
+
+      const hold = useCallback(() => {
+        clearTimeout(timer.current);
+        setCounting(false);
+      }, []);
+
+      if (!open) return null;
+      const roundNo = game.rounds.length;
+
+      return h("div", { className: "chart-scrim", onClick: onClose },
+        h("div", {
+          className: "chart-modal",
+          role: "dialog",
+          "aria-modal": "true",
+          "aria-label": "Position tracker",
+          onClick: (event) => event.stopPropagation(),
+          onPointerDown: hold,
+          onMouseMove: hold,
+          onKeyDown: hold
+        },
+          counting
+            ? h("div", { className: "chart-countdown", "aria-hidden": "true" },
+                h("i", { style: { animationDuration: `${CHART_AUTO_CLOSE_MS}ms` } }))
+            : null,
+          h("div", { className: "chart-modal-head" },
+            h("div", { className: "grow" },
+              h("h3", null, roundNo ? `After round ${roundNo}` : "Position tracker"),
+              h("p", null, "Points after each round · the card shows their place")
+            ),
+            h("button", {
+              type: "button", className: "chart-close",
+              onClick: onClose, "aria-label": "Close chart"
+            }, "✕")
+          ),
+
+          h("div", { className: "chart-legend" }, game.players.map((player, index) =>
+            h("span", { className: `chart-legend-item ${tone(index)}`, key: index },
+              h("i", { "aria-hidden": "true" }), player.name)
+          )),
+
+          h(PositionChart, { players: game.players, byRound, target: game.target, animKey }),
+
+          h("div", { className: "chart-modal-foot" },
+            h("p", { className: "chart-key" },
+              h("b", null, "A"), " 1st ", h("b", null, "K"), " 2nd ",
+              h("b", null, "Q"), " 3rd ", h("b", null, "J"), " 4th",
+              counting ? h("span", { className: "chart-auto" }, " · closes on its own") : null),
+            h(Button, { className: "primary", onClick: onClose }, "Back to the game")
+          )
+        )
+      );
+    }
+
     /* The live board: standings and round history. Score entry lives on its own page. */
-    function BoardPage({ game, onUpdateRound, onDeleteRound, onFinish, onAbandon, notify }) {
+    function BoardPage({ game, onUpdateRound, onDeleteRound, onFinish, onAbandon, notify, lastRoundAt }) {
       const [editing, setEditing] = useState(null);
       const [editValues, setEditValues] = useState([]);
       const [editError, setEditError] = useState("");
+      const [chartOpen, setChartOpen] = useState(false);
+      const [animKey, setAnimKey] = useState(0);
 
       const totals = useMemo(() => computeTotals(game.players.length, game.rounds), [game.players.length, game.rounds]);
       const ranking = useMemo(() => rankedPlayers(game.players, totals), [game.players, totals]);
       const payout = useMemo(() => payoutDetails(ranking, game.payments), [ranking, game.payments]);
+      const byRound = useMemo(() => standingsByRound(game.players.length, game.rounds), [game.players.length, game.rounds]);
+
+      /* Saving a round throws the chart up as a popup so the animation plays
+         front and centre; the viewer closes it with the cross. */
+      useEffect(() => {
+        if (!lastRoundAt || !game.rounds.length) return;
+        setAnimKey((key) => key + 1);
+        setChartOpen(true);
+      }, [lastRoundAt]);
+
+      function openChart() {
+        setAnimKey((key) => key + 1);
+        setChartOpen(true);
+      }
       const leader = ranking[0];
       const nextRound = game.rounds.length + 1;
 
@@ -2949,11 +3662,29 @@
             }))
           ),
 
+          game.rounds.length
+            ? h("button", {
+                type: "button",
+                className: "chart-launch",
+                onClick: openChart
+              },
+                h("span", { className: "chart-launch-cards", "aria-hidden": "true" },
+                  ["A", "K", "Q", "J"].slice(0, game.players.length).map((card, index) =>
+                    h("span", { className: `mini-card ${tone(index)}`, key: card }, card))
+                ),
+                h("span", { className: "chart-launch-main" },
+                  h("strong", null, "Position tracker"),
+                  h("span", null, "See how the points and places have moved")
+                ),
+                h("span", { className: "chart-launch-go", "aria-hidden": "true" }, "↗")
+              )
+            : null,
+
           h("section", { className: "card" },
             h("div", { className: "card-head" },
               h("div", null,
                 h("h3", { className: "card-title" }, "Round history"),
-                h("p", { className: "card-sub" }, "Tap Edit to fix a score, or delete a round.")
+                h("p", { className: "card-sub" }, "Place and running total are the standings after that round.")
               ),
               game.rounds.length
                 ? h(Button, { className: "small ghost", onClick: () => removeRound(game.rounds.length - 1) }, "Undo last")
@@ -2999,15 +3730,31 @@
                               )),
                               editError ? h("div", { className: "field-error" }, editError) : h("div", { className: "hint" }, "Negative numbers are fine for deductions.")
                             )
-                          : h("div", { className: `round-scores c${game.players.length}` }, scores.map((score, index) =>
-                              h("div", { className: `round-score ${tone(index)}`, key: index },
+                          : h("div", { className: `round-scores c${game.players.length}` }, scores.map((score, index) => {
+                              const stand = byRound[roundIndex];
+                              const spot = stand ? stand.places[index] : null;
+                              const prior = roundIndex > 0 && byRound[roundIndex - 1] ? byRound[roundIndex - 1].places[index].place : null;
+                              const moved = prior == null || !spot ? 0 : prior - spot.place;
+                              return h("div", { className: `round-score ${tone(index)}`, key: index },
+                                spot
+                                  ? h("div", { className: `round-rank${spot.place === 0 ? " lead" : ""}` },
+                                      moved !== 0
+                                        ? h("span", {
+                                            className: `round-move ${moved > 0 ? "up" : "down"}`,
+                                            title: `Moved ${moved > 0 ? "up" : "down"} ${Math.abs(moved)}`
+                                          }, moved > 0 ? "\u25B2" : "\u25BC")
+                                        : null,
+                                      `${ordinal(spot.place)}${spot.tied ? "=" : ""}`
+                                    )
+                                  : null,
                                 h("span", null, game.players[index].name),
                                 h("strong", null,
                                   signedPoints(score),
                                   event && event.player === index ? h("span", { className: "sym-inline" }, handByType[event.type] ? handByType[event.type].symbol : "") : null
-                                )
-                              )
-                            ))
+                                ),
+                                stand ? h("div", { className: "round-total" }, `${stand.totals[index]} pts`) : null
+                              );
+                            }))
                       );
                     }),
                     h(HandLegend, { rounds: game.rounds })
@@ -3028,7 +3775,15 @@
             h("span", { className: "ico", "aria-hidden": "true" }, "\uD83C\uDFC1"), "End game & settle up"),
           h(Button, { className: "quiet block small", onClick: onAbandon }, "Abandon without saving")
         ),
-        h("div", { className: "cta-spacer", "aria-hidden": "true" })
+        h("div", { className: "cta-spacer", "aria-hidden": "true" }),
+
+        h(ChartModal, {
+          open: chartOpen,
+          game,
+          byRound,
+          animKey,
+          onClose: () => setChartOpen(false)
+        })
       );
     }
 
@@ -3077,7 +3832,8 @@
       function saveHand() {
         if (!selectedHand) { setError("Pick which special hand it was."); return; }
         if (awardee == null) { setError("Pick who had the hand."); return; }
-        const scores = game.players.map((_, index) => index === awardee ? selectedHand.points : 0);
+        const award = handAward(selectedHand, game.target, totals[awardee]);
+        const scores = game.players.map((_, index) => index === awardee ? award : 0);
         onSaveRound({ scores, event: { type: selectedHand.type, player: awardee } });
       }
 
@@ -3157,7 +3913,7 @@
                     },
                       h("span", { className: "sym" }, item.symbol),
                       h("span", { className: "lbl" }, item.label),
-                      h("span", { className: "pts" }, item.wins ? "Wins the game" : `+${item.points} points`)
+                      h("span", { className: "pts" }, item.toTarget ? `Straight to ${game.target}` : `+${item.points} points`)
                     )
                   ))
                 ),
@@ -3177,11 +3933,11 @@
                   ? h("div", { className: "hand-summary" },
                       h("span", { className: "sym" }, selectedHand.symbol),
                       h("div", null,
-                        h("strong", null, selectedHand.wins
-                          ? `${game.players[awardee].name} wins the game outright`
+                        h("strong", null, selectedHand.toTarget
+                          ? `${game.players[awardee].name} jumps to ${game.target} and wins`
                           : `${game.players[awardee].name} gets +${selectedHand.points}`),
-                        h("span", null, selectedHand.wins
-                          ? "The game ends now and payouts are settled."
+                        h("span", null, selectedHand.toTarget
+                          ? `That is +${handAward(selectedHand, game.target, totals[awardee])} points, straight to the target — the game ends here.`
                           : "Everyone else scores 0 this round.")
                       )
                     )
@@ -3223,6 +3979,10 @@
 
       const payout = payoutDetails(record.ranked, record.payments || []);
       const pot = recordPot(record);
+      const byRound = standingsByRound(record.players.length, record.rounds);
+      const crowned = new Set(record.ranked
+        .filter((player) => (payout.byIndex[player.index] || {}).place === 0)
+        .map((player) => player.index));
 
       return h(React.Fragment, null,
         confetti.length
@@ -3255,6 +4015,32 @@
           ),
           h("div", { className: "card-body" }, h(PayoutList, { record, payout }))
         ),
+
+        record.rounds.length
+          ? h("section", { className: "card" },
+              h("div", { className: "card-head" },
+                h("div", null,
+                  h("h3", { className: "card-title" }, "How it was won"),
+                  h("p", { className: "card-sub" }, "Points after each round \u00B7 the card shows their place"))
+              ),
+              h("div", { className: "card-body" },
+                h("div", { className: "chart-legend" }, record.players.map((player, index) =>
+                  h("span", { className: `chart-legend-item ${tone(index)}`, key: index },
+                    h("i", { "aria-hidden": "true" }), player.name)
+                )),
+                h(PositionChart, {
+                  players: record.players,
+                  byRound,
+                  target: record.target,
+                  animKey: record.id,
+                  crowned
+                }),
+                h("p", { className: "chart-key" },
+                  h("b", null, "A"), " 1st ", h("b", null, "K"), " 2nd ",
+                  h("b", null, "Q"), " 3rd ", h("b", null, "J"), " 4th")
+              )
+            )
+          : null,
 
         h(RoundTable, { record }),
 
@@ -3549,12 +4335,12 @@
                   h("tr", { key: hand.type },
                     h("td", null, h("b", { style: { color: "var(--brand)" } }, hand.symbol)),
                     h("td", { style: { textAlign: "left", whiteSpace: "normal" } }, h("strong", null, hand.label), h("div", { className: "hint" }, hand.detail)),
-                    h("td", null, hand.wins ? h("strong", null, "Wins the game") : `+${hand.points} pts`)
+                    h("td", null, hand.toTarget ? h("strong", null, "Straight to the target") : `+${hand.points} pts`)
                   )
                 ))
               )
             ),
-            h("p", { className: "hint", style: { marginTop: 10 } }, "An A→K run ends the game immediately: that player takes 1st place regardless of points, and everyone else is ranked by their totals to work out who pays what.")
+            h("p", { className: "hint", style: { marginTop: 10 } }, "An A→K run scores whatever it takes to put that player on the winning target, so the game ends there and then. Everyone else is ranked by their own totals to work out who pays what.")
           )
         ),
 
@@ -3607,6 +4393,7 @@
       });
       const [theme, setTheme] = useState(() => readStore(THEME_KEY, "auto"));
       const [toast, setToast] = useState("");
+      const [lastRoundAt, setLastRoundAt] = useState(null);
       const [modal, setModal] = useState(null);
       const toastTimer = useRef(null);
 
@@ -3679,6 +4466,7 @@
           return;
         }
         setGame({ ...game, rounds });
+        setLastRoundAt(Date.now());
         if (message) notify(message);
       }, [game, finishGame, notify]);
 
@@ -3687,7 +4475,7 @@
         const hand = eventHand(round);
         const event = roundEvent(round);
         const label = hand && event
-          ? `${game.players[event.player].name} ${hand.symbol} +${hand.points}`
+          ? `${game.players[event.player].name} ${hand.symbol} +${asNumber(roundScores(round)[event.player], 0)}`
           : `Round ${game.rounds.length + 1} saved`;
         navigate("#/game");
         commitRounds([...game.rounds, normalizeRound(round)], label);
@@ -3773,7 +4561,8 @@
             onDeleteRound: deleteRound,
             onFinish: requestFinish,
             onAbandon: requestAbandon,
-            notify
+            notify,
+            lastRoundAt
           });
         }
       } else if (route.name === "results") {
