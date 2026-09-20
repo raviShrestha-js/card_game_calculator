@@ -639,10 +639,10 @@
 
     /* --pc-chart is the stroke used in the chart. Same four hues, stepped for
        each surface and validated (six checks, all-pairs) in both modes. */
-    .p0 { --pc: #7c5cff; --pc-text: #5334db; --pc-chart: #7c5cff; }
-    .p1 { --pc: #0ea5e9; --pc-text: #0369a1; --pc-chart: #0284c7; }
-    .p2 { --pc: #f59e0b; --pc-text: #b45309; --pc-chart: #a85009; }
-    .p3 { --pc: #10b981; --pc-text: #047857; --pc-chart: #047857; }
+    .p0 { --pc: #7c5cff; --pc-text: #5334db; --pc-chart: #7c5cff; --pc-dash: none; --pc-dashoff: 0; }
+    .p1 { --pc: #0ea5e9; --pc-text: #0369a1; --pc-chart: #0284c7; --pc-dash: 10 5; --pc-dashoff: 0; }
+    .p2 { --pc: #f59e0b; --pc-text: #b45309; --pc-chart: #a85009; --pc-dash: 2 5; --pc-dashoff: 3; }
+    .p3 { --pc: #10b981; --pc-text: #047857; --pc-chart: #047857; --pc-dash: 14 4 3 4; --pc-dashoff: 7; }
 
     :root[data-theme="dark"] .p0 { --pc-text: #b6a8ff; --pc-chart: #7c5cff; }
     :root[data-theme="dark"] .p1 { --pc-text: #7dd3fc; --pc-chart: #0284c7; }
@@ -1319,20 +1319,39 @@
     .chart-legend {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px 14px;
-      margin-bottom: 8px;
+      gap: 6px;
+      margin-bottom: 10px;
     }
 
     .chart-legend-item {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
+      padding: 4px 9px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
       color: var(--muted);
       font-size: 12.5px;
       font-weight: 650;
+      cursor: pointer;
+      transition: background .16s ease, border-color .16s ease, color .16s ease;
     }
 
-    .chart-legend-item i { width: 14px; height: 3px; border-radius: 2px; background: var(--pc-chart); }
+    .chart-legend-item:hover { background: var(--surface-2); color: var(--ink); }
+
+    .chart-legend-item[aria-pressed="true"] {
+      color: var(--pc-text);
+      border-color: color-mix(in srgb, var(--pc-chart) 45%, transparent);
+      background: color-mix(in srgb, var(--pc-chart) 12%, transparent);
+    }
+
+    /* the swatch repeats each line's own dash, so the legend identifies the
+       stroke and not just the colour */
+    .chart-legend-item i { width: 24px; height: 3px; border-radius: 2px; background: var(--pc-chart); }
+    .chart-legend-item.p1 i { border-radius: 0; background: repeating-linear-gradient(90deg, var(--pc-chart) 0 7px, transparent 7px 10.5px); }
+    .chart-legend-item.p2 i { border-radius: 0; background: repeating-linear-gradient(90deg, var(--pc-chart) 0 2px, transparent 2px 6px); }
+    .chart-legend-item.p3 i { border-radius: 0; background: repeating-linear-gradient(90deg, var(--pc-chart) 0 10px, transparent 10px 13px, var(--pc-chart) 13px 15px, transparent 15px 18px); }
 
     .chart-wrap { width: 100%; }
     .chart { display: block; overflow: visible; }
@@ -1357,10 +1376,12 @@
       font-variant-numeric: tabular-nums;
     }
 
+    /* The halo keeps crossings legible, but it must stay narrower than the
+       gap we leave between tied lines or it paints over its neighbours. */
     .chart-halo {
       fill: none;
       stroke: var(--surface-solid);
-      stroke-width: 6;
+      stroke-width: 4;
       stroke-linejoin: round;
       stroke-linecap: round;
     }
@@ -1368,16 +1389,23 @@
     .chart-stroke {
       fill: none;
       stroke: var(--pc-chart);
-      stroke-width: 2;
+      stroke-width: 2.5;
+      stroke-dasharray: var(--pc-dash);
+      stroke-dashoffset: var(--pc-dashoff, 0);
       stroke-linejoin: round;
       stroke-linecap: round;
     }
 
-    .chart-card-ring { fill: var(--surface-solid); }
-    .chart-card-face { fill: var(--surface-solid); stroke: var(--pc-chart); stroke-width: 1.5; }
-    .chart-card-text { fill: var(--pc-chart); font-family: var(--font-display); font-size: 12px; font-weight: 800; }
-    .chart-card.lead .chart-card-face { fill: var(--pc-chart); }
-    .chart-card.lead .chart-card-text { fill: #fff; }
+    .chart-dot {
+      fill: var(--pc-chart);
+      stroke: var(--surface-solid);
+      stroke-width: 1.5;
+    }
+
+    /* isolating one player drops the rest back without hiding them */
+    .chart-series.has-focus .chart-line { opacity: .16; }
+    .chart-series.has-focus .chart-line.on { opacity: 1; }
+    .chart-series.has-focus .chart-line.on .chart-stroke { stroke-width: 3.5; }
 
     .chart-endlabel { fill: var(--pc-text); font-size: 12px; font-weight: 700; }
     .chart-endpts { fill: var(--ink); font-family: var(--font-display); font-size: 14.5px; font-weight: 800; }
@@ -1386,7 +1414,7 @@
       font-size: 15px;
       opacity: 0;
       animation: crownIn .5s cubic-bezier(.2, .9, .3, 1.4) forwards;
-      animation-delay: 1.35s;
+      animation-delay: 1.25s;
     }
 
     @keyframes crownIn {
@@ -1456,38 +1484,24 @@
     .chart-key b { font-family: var(--font-display); color: var(--ink); font-weight: 800; margin-left: 6px; }
     .chart-key b:first-child { margin-left: 0; }
 
-    /* the lines sweep in, then the cards deal round by round */
-    .chart-line .chart-stroke,
-    .chart-line .chart-halo {
-      stroke-dasharray: 1;
-      stroke-dashoffset: 1;
-      animation: drawLine 1s cubic-bezier(.35, .7, .3, 1) forwards;
-      animation-delay: var(--d, 0ms);
-    }
-
-    @keyframes drawLine { to { stroke-dashoffset: 0; } }
-
-    .chart-card {
-      opacity: 0;
+    /* a clip sweeps left to right, so every line draws at once and each
+       keeps its own dash pattern while it does */
+    .chart-reveal {
       transform-box: fill-box;
-      transform-origin: center;
-      animation: dealCard .36s cubic-bezier(.2, .9, .3, 1.3) forwards;
-      animation-delay: var(--d, 0ms);
+      transform-origin: left center;
+      animation: revealPlot 1.15s cubic-bezier(.35, .72, .3, 1) forwards;
     }
 
-    @keyframes dealCard {
-      from { opacity: 0; transform: translateY(-14px) scale(.6) rotate(-14deg); }
-      to { opacity: 1; transform: none; }
-    }
+    @keyframes revealPlot { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
-    .chart-endlabel { opacity: 0; animation: fadeIn .34s ease forwards; animation-delay: 1.15s; }
+    .chart-labels { opacity: 0; animation: fadeIn .34s ease forwards; animation-delay: 1.1s; }
 
     @keyframes fadeIn { to { opacity: 1; } }
 
     @media (prefers-reduced-motion: reduce) {
-      .chart-line .chart-stroke,
-      .chart-line .chart-halo { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
-      .chart-card, .chart-endlabel, .chart-crown { opacity: 1; animation: none; }
+  
+      .chart-labels, .chart-endlabel, .chart-crown { opacity: 1; animation: none; }
+      .chart-reveal { animation: none; transform: none; }
       .chart-countdown i { animation: none; transform: scaleX(0); }
       .chart-modal { animation: none; }
     }
@@ -3237,7 +3251,6 @@
        after that round — A 1st, K 2nd, Q 3rd, J 4th. Colour follows the
        player, never their rank. */
 
-    const rankCards = ["A", "K", "Q", "J"];
     const CHART_ROUND_WINDOW = 10;
 
     function niceScale(min, max, target) {
@@ -3277,6 +3290,7 @@
       const wrapRef = useRef(null);
       const width = useElementWidth(wrapRef);
       const [active, setActive] = useState(null);
+      const [focus, setFocus] = useState(null);
 
       const total = byRound.length;
       const start = Math.max(0, total - CHART_ROUND_WINDOW);
@@ -3285,57 +3299,52 @@
 
       const narrow = width < 400;
       const padLeft = 36;
-      const padRight = narrow ? 60 : 92;
+      const padRight = narrow ? 62 : 92;
       const padTop = 22;
       const padBottom = 34;
+      const inset = 16;
       const plotW = Math.max(60, width - padLeft - padRight);
       const plotH = (narrow ? 232 : 270) + Math.max(0, players.length - 2) * 16;
       const height = padTop + plotH + padBottom;
 
       const allTotals = shown.reduce((acc, stand) => acc.concat(stand.totals), []);
       const scale = niceScale(Math.min.apply(null, allTotals), Math.max.apply(null, allTotals), target);
-      const cardW = 18, cardH = 24;
-      /* Two passes: size the fan from the room a round gets, then inset the
-         plot far enough that a fanned card never reaches the axis labels. */
-      const roughStep = shown.length > 1 ? Math.max(0, plotW - 40) / (shown.length - 1) : plotW;
-      const room = players.length > 1 ? (roughStep - cardW - 4) / (players.length - 1) : cardW;
-      const fanStep = Math.min(cardW + 3, Math.max(10, room));
-      const maxFan = players.length > 1 ? ((players.length - 1) / 2) * fanStep : 0;
-      const inset = Math.max(20, maxFan + cardW / 2 + 6);
       const span = Math.max(0, plotW - inset * 2);
       const stepX = shown.length > 1 ? span / (shown.length - 1) : 0;
 
       const xAt = (i) => padLeft + inset + (shown.length > 1 ? i * stepX : span / 2);
       const yAt = (points) => padTop + plotH - ((points - scale.min) / (scale.max - scale.min)) * plotH;
 
-
-      /* Players on similar points would stack their cards on top of each other,
-         so cards that collide vertically fan out sideways like a held hand.
-         The vertical position — the actual score — is never moved. */
-      const markerAt = shown.map((stand, i) => {
-        const rows = players
-          .map((_, idx) => ({ idx, y: yAt(stand.totals[idx]) }))
-          .sort((a, b) => a.y - b.y);
-        const groups = [];
-        rows.forEach((row) => {
-          const group = groups[groups.length - 1];
-          if (group && row.y - group[group.length - 1].y < cardH + 2) group.push(row);
-          else groups.push([row]);
+      /* Players level on points would draw one line exactly on top of another,
+         so tied lines are separated by a couple of pixels — far too small to
+         misread as a difference in score, enough to keep both visible. */
+      const yFor = shown.map((stand) => {
+        const groups = new Map();
+        players.forEach((_, idx) => {
+          const key = String(stand.totals[idx]);
+          groups.set(key, (groups.get(key) || []).concat(idx));
         });
-        const out = new Array(players.length);
-        groups.forEach((group) => {
-          group.forEach((row, k) => {
-            const offset = group.length === 1 ? 0 : (k - (group.length - 1) / 2) * fanStep;
-            out[row.idx] = { x: xAt(i) + offset, y: row.y };
-          });
+        return players.map((_, idx) => {
+          const group = groups.get(String(stand.totals[idx]));
+          const k = group.indexOf(idx);
+          /* The gap has to clear the halo drawn under each line, or the line
+             on top erases its neighbours. Total spread is capped so a tie
+             still reads as a tie. */
+          const step = Math.min(5.5, 16 / Math.max(1, group.length - 1));
+          const offset = group.length === 1 ? 0 : (k - (group.length - 1) / 2) * step;
+          return yAt(stand.totals[idx]) + offset;
         });
-        return out;
       });
 
-      /* End labels get nudged apart too — they annotate, they do not encode. */
+      const activeIndex = active == null ? shown.length - 1 : active;
+      const activeStand = shown[activeIndex];
+      const targetInView = target <= scale.max && target >= scale.min;
       const lastStand = shown[shown.length - 1];
+      const lastI = shown.length - 1;
+
+      /* End labels get nudged apart too — they annotate, they do not encode. */
       const endLabels = players
-        .map((player, idx) => ({ idx, player, y: yAt(lastStand.totals[idx]) }))
+        .map((player, idx) => ({ idx, player, y: yFor[lastI][idx] }))
         .sort((a, b) => a.y - b.y);
       let lastY = -Infinity;
       endLabels.forEach((label) => {
@@ -3343,11 +3352,21 @@
         lastY = label.ly;
       });
 
-      const activeIndex = active == null ? shown.length - 1 : active;
-      const activeStand = shown[activeIndex];
-      const targetInView = target <= scale.max && target >= scale.min;
+      const clipId = `chartReveal${animKey}`;
 
       return h("div", { className: "chart-wrap", ref: wrapRef },
+        /* Tapping a name isolates that line — the reliable way to read one
+           player out of a bundle that share the same score. */
+        h("div", { className: "chart-legend" }, players.map((player, index) =>
+          h("button", {
+            key: index,
+            type: "button",
+            className: `chart-legend-item ${tone(index)}`,
+            "aria-pressed": focus === index,
+            onClick: () => setFocus((current) => current === index ? null : index)
+          }, h("i", { "aria-hidden": "true" }), player.name)
+        )),
+
         h("svg", {
           className: "chart",
           width: "100%",
@@ -3356,19 +3375,22 @@
           role: "img",
           "aria-label": `Points after each round for ${players.map((p) => p.name).join(", ")}. The same figures are in the round history.`
         },
+          h("defs", null,
+            h("clipPath", { id: clipId },
+              h("rect", { className: "chart-reveal", x: padLeft, y: 0, width: plotW + padRight, height })
+            )
+          ),
+
           scale.ticks.map((tick) => h("line", {
-            key: `g${tick}`,
-            className: "chart-grid",
+            key: `g${tick}`, className: "chart-grid",
             x1: padLeft, x2: padLeft + plotW, y1: yAt(tick), y2: yAt(tick)
           })),
 
           scale.ticks.map((tick) => h("text", {
-            key: `t${tick}`,
-            className: "chart-ylabel",
+            key: `t${tick}`, className: "chart-ylabel",
             x: padLeft - 8, y: yAt(tick) + 4, textAnchor: "end"
           }, tick)),
 
-          /* the finish line */
           targetInView ? h("line", {
             className: "chart-target",
             x1: padLeft, x2: padLeft + plotW, y1: yAt(target), y2: yAt(target)
@@ -3392,36 +3414,28 @@
             }, `R${start + i + 1}`);
           }),
 
-          h("g", { key: animKey, className: "chart-series" },
+          /* The whole set of lines is revealed left to right by a moving clip,
+             which keeps each line's own dash pattern intact while it draws. */
+          h("g", {
+            key: animKey,
+            className: `chart-series${focus == null ? "" : " has-focus"}`,
+            clipPath: `url(#${clipId})`
+          },
             players.map((player, index) => {
-              const points = shown.map((stand, i) => `${xAt(i)},${yAt(stand.totals[index])}`).join(" ");
-              return h("g", { key: `s${index}`, className: `chart-line ${tone(index)}`, style: { "--d": `${index * 80}ms` } },
-                shown.length > 1 ? h("polyline", { className: "chart-halo", points, pathLength: "1" }) : null,
-                shown.length > 1 ? h("polyline", { className: "chart-stroke", points, pathLength: "1" }) : null
+              const points = shown.map((_, i) => `${xAt(i)},${yFor[i][index]}`).join(" ");
+              return h("g", { key: `s${index}`, className: `chart-line ${tone(index)}${focus === index ? " on" : ""}` },
+                shown.length > 1 ? h("polyline", { className: "chart-halo", points }) : null,
+                shown.length > 1 ? h("polyline", { className: "chart-stroke", points }) : null,
+                shown.map((_, i) => h("circle", {
+                  key: `d${i}`,
+                  className: "chart-dot",
+                  cx: xAt(i), cy: yFor[i][index], r: 4.5
+                }))
               );
-            }),
+            })
+          ),
 
-            /* cards deal round by round, so the game replays as you watch */
-            players.map((player, index) => shown.map((stand, i) => {
-              const place = stand.places[index].place;
-              const spot = markerAt[i][index];
-              const cx = spot.x;
-              const cy = spot.y;
-              const w = cardW, ht = cardH;
-              return h("g", {
-                key: `m${index}-${i}`,
-                className: `chart-card ${tone(index)}${place === 0 ? " lead" : ""}`,
-                style: { "--d": `${520 + i * 130 + index * 34}ms` }
-              },
-                h("rect", { className: "chart-card-ring", x: cx - w / 2 - 2, y: cy - ht / 2 - 2, width: w + 4, height: ht + 4, rx: 6 }),
-                h("rect", { className: "chart-card-face", x: cx - w / 2, y: cy - ht / 2, width: w, height: ht, rx: 4 }),
-                h("text", { className: "chart-card-text", x: cx, y: cy + 4.5, textAnchor: "middle" },
-                  rankCards[place] || String(place + 1))
-              );
-            })),
-
-            /* the latest round carries each player's running total, so the
-               scores can be read straight off the chart */
+          h("g", { key: `lab${animKey}`, className: "chart-labels" },
             endLabels.map((label) => {
               const cap = narrow ? 6 : 8;
               const name = label.player.name;
@@ -3429,7 +3443,7 @@
               return h("text", {
                 key: `l${label.idx}`,
                 className: `chart-endlabel ${tone(label.idx)}`,
-                x: xAt(shown.length - 1) + maxFan + 13,
+                x: xAt(lastI) + 13,
                 y: label.ly + 4
               },
                 h("tspan", null, short),
@@ -3438,16 +3452,14 @@
             }),
 
             crowned && crowned.size
-              ? players.map((player, index) => {
-                  if (!crowned.has(index)) return null;
-                  const spot = markerAt[shown.length - 1][index];
-                  return h("text", {
-                    key: `crown${index}`,
-                    className: "chart-crown",
-                    x: spot.x, y: spot.y - cardH / 2 - 8,
-                    textAnchor: "middle"
-                  }, "\uD83D\uDC51");
-                })
+              ? players.map((player, index) => crowned.has(index)
+                  ? h("text", {
+                      key: `crown${index}`,
+                      className: "chart-crown",
+                      x: xAt(lastI), y: yFor[lastI][index] - 13,
+                      textAnchor: "middle"
+                    }, "👑")
+                  : null)
               : null
           ),
 
@@ -3471,7 +3483,7 @@
                 .map((player, index) => ({ player, index, place: activeStand.places[index].place, points: activeStand.totals[index] }))
                 .sort((a, b) => a.place - b.place || a.index - b.index)
                 .map((row) => h("span", { className: `chart-readout-item ${tone(row.index)}`, key: row.index },
-                  h("b", null, rankCards[row.place] || row.place + 1),
+                  h("b", null, `${ordinal(row.place)}${row.place === 0 && activeStand.places[row.index].tied ? "=" : ""}`),
                   row.player.name,
                   h("i", null, `${row.points}`)
                 ))
@@ -3536,7 +3548,7 @@
           h("div", { className: "chart-modal-head" },
             h("div", { className: "grow" },
               h("h3", null, roundNo ? `After round ${roundNo}` : "Position tracker"),
-              h("p", null, "Points after each round · the card shows their place")
+              h("p", null, "Points after each round · hover a round for the standings")
             ),
             h("button", {
               type: "button", className: "chart-close",
@@ -3544,18 +3556,11 @@
             }, "✕")
           ),
 
-          h("div", { className: "chart-legend" }, game.players.map((player, index) =>
-            h("span", { className: `chart-legend-item ${tone(index)}`, key: index },
-              h("i", { "aria-hidden": "true" }), player.name)
-          )),
-
           h(PositionChart, { players: game.players, byRound, target: game.target, animKey }),
 
           h("div", { className: "chart-modal-foot" },
             h("p", { className: "chart-key" },
-              h("b", null, "A"), " 1st ", h("b", null, "K"), " 2nd ",
-              h("b", null, "Q"), " 3rd ", h("b", null, "J"), " 4th",
-              counting ? h("span", { className: "chart-auto" }, " · closes on its own") : null),
+              counting ? "Closes on its own — tap the chart to keep it open" : "Tap a round to read the standings"),
             h(Button, { className: "primary", onClick: onClose }, "Back to the game")
           )
         )
@@ -4021,13 +4026,9 @@
               h("div", { className: "card-head" },
                 h("div", null,
                   h("h3", { className: "card-title" }, "How it was won"),
-                  h("p", { className: "card-sub" }, "Points after each round \u00B7 the card shows their place"))
+                  h("p", { className: "card-sub" }, "Points after each round, and where that left everyone"))
               ),
               h("div", { className: "card-body" },
-                h("div", { className: "chart-legend" }, record.players.map((player, index) =>
-                  h("span", { className: `chart-legend-item ${tone(index)}`, key: index },
-                    h("i", { "aria-hidden": "true" }), player.name)
-                )),
                 h(PositionChart, {
                   players: record.players,
                   byRound,
@@ -4035,9 +4036,7 @@
                   animKey: record.id,
                   crowned
                 }),
-                h("p", { className: "chart-key" },
-                  h("b", null, "A"), " 1st ", h("b", null, "K"), " 2nd ",
-                  h("b", null, "Q"), " 3rd ", h("b", null, "J"), " 4th")
+                h("p", { className: "chart-key" }, "Hover or tap a round to read the standings at that point")
               )
             )
           : null,
